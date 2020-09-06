@@ -1,1 +1,289 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-177345198-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-177345198-1');
+  </script>
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+  <title>Bark Machine</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- FONT
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+  <link rel="stylesheet" href="css/custom.css">
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/png" href="images/favicon-32x32.png">
+  
+</head>
+<body>
+
+  <!-- Primary Page Layout
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <div class="container">
+    <section class="header">
+      <h1>&#x1F415;&#x1F4E2; Bark Machine &#x1F4E2;&#x1F415;</h1>
+    </section>
+    <hr>
+    <h3 style="text-align: center">&#x1F399; Sound Meter &#x1F399;</h3>
+    <div id="meterGraph">
+      <div id="meterLimit">
+          <p id="meterLimitLabel">TBD</p>
+      </div>
+      <div id="meter">
+        <p id="vector"></p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="six columns">
+        <p>Red line is trigger value, adjust using slider</p>
+        <input type="range" id="slider" min="0" max="100">
+      </div>
+      <div class="six columns">
+        <p>Max Recorded Value</p>
+        <p id="maxValue">0</p>
+      </div>
+    </div>
+    <hr>
+    <div class="row" style="text-align: center">
+      <div class="four columns" >
+        <h3 >&#x1F6A6;<br>On/Off Switch</h3>
+        <!-- Rounded switch -->
+        <label class="switch">
+          <input type="checkbox" id='onOffSwitch' onclick='handleOnOffSwitchClick(this);'>
+          <span class="slider round"></span>
+        </label>
+        <p id="isCoolingOff">Trigger Cooled Off</p>
+      </div>
+      <div class="four columns">
+        <h3>&#x1F39B;<br>Audio Selection</h3>
+        <select id="audioOptions">
+          <option>grantTest.m4a</option>
+          <option>grantTest2.m4a</option>
+          <option>michelleHeyNo.m4a</option>
+          <option>michelleNoBenji.m4a</option>
+        </select>
+        <input type="file" accept="audio/*" capture id="recorder">
+      </div>
+      <div class="four columns">
+        <h3>&#x1F50A;<br>Audio Player</h3>
+        <audio id="player" controls preload="auto">
+          <source src="grantTest.m4a">
+          Your browser does not support the audio element. Try downloading Google Chrome.
+        </audio>
+      </div>
+    </div>
+
+    <hr>
+
+    <h3 style="text-align: center">&#x1F4C8; Bark History &#x1F4C8;</h3>
+    <section class="sound-clips">
+
+    </section>
+    <ol id="barkHistory">
+    </ol>
+    <a class="button" id='clearBarkHistory' onclick='clearBarkHistory()'>Clear Bark History</a>
+
+    <hr>
+    <h3 style="text-align: center">&#x1F4EC; Feedback? &#x1F4EC;</h3>
+    <p>If you have any feedback on this tool, please <a href="mailto:barkmachineapp@gmail.com?subject=Bark Machine Feedback">email me</a>! I would love to hear all suggestions, criticisms, and testimonials on whether this tool is useful or not!</p>
+    <br>
+  </div>
+
+<!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <!-- include adapter for srcObject shim -->
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="https://unpkg.com/wavesurfer.js"></script>
+  <script>
+    var blob = window.URL || window.webkitURL;
+    var meterLimitVal = 25;
+
+    var meterLimit = document.getElementById('meterLimit');
+    var meterLimitLabel = document.getElementById('meterLimitLabel');
+    updateLimit(meterLimitVal);
+
+    const recorder = document.getElementById('recorder');
+    const audioOptions = document.getElementById('audioOptions');
+    const player = document.getElementById('player');
+    const slider = document.getElementById('slider');
+
+    recorder.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      player.src = blob.createObjectURL(file);;
+    });
+
+    audioOptions.addEventListener('change', function(e) {
+      console.log(e)
+      player.src = e.target.value;
+    });
+
+    slider.addEventListener('change', function(e) {
+      meterLimitVal = e.target.value;
+      updateLimit(meterLimitVal);
+    });
+
+    function updateLimit(val) {
+      meterLimit.style.marginLeft = val + '%';
+      meterLimitLabel.innerHTML = val;
+    };
+
+    var coolingOff = false;
+    updateCoolingOff(coolingOff)
+    
+    function clearBarkHistory() {
+      document.getElementById('barkHistory').innerHTML = '';
+    }
+
+    function updateBarkHistory(pct) {
+      var addition = '<li>' + "Barked: " + pct + ", " + new Date() + '</li>';
+      console.log(addition)
+      document.getElementById('barkHistory').innerHTML += addition;
+    }
+
+    function updateCoolingOff(isCoolingOff) {
+      coolingOff = isCoolingOff;
+      const isCoolingOffVal = document.getElementById('isCoolingOff');
+      if (isCoolingOff) {
+        isCoolingOffVal.innerHTML = "Trigger Cooling Off for 10 Seconds";
+      } else {
+        isCoolingOffVal.innerHTML = "Trigger Cooled Off";
+      }
+    };
+
+    function updateMeter(rms) {
+        var meter = document.getElementById('meter');
+        var vector = document.getElementById('vector');
+        var maxValue = document.getElementById('maxValue');
+
+        pct = rms * 100;
+        meter.style.width = pct + '%';
+        roundedPct = Math.round(pct);
+        vector.innerHTML = roundedPct
+        if (maxValue.innerHTML < pct) {
+          maxValue.innerHTML = roundedPct;
+        }
+        if (!coolingOff && roundedPct > meterLimitVal && document.getElementById('onOffSwitch').checked) {
+          updateBarkHistory(roundedPct);
+          player.play();
+          updateCoolingOff(true);
+          setTimeout(function() { updateCoolingOff(false); }, 10000);
+        }
+      };
+
+    var chunks = [];
+    var soundClips = document.querySelector('.sound-clips');
+    var mediaRecorder;
+    var idCounter = 0;
+
+    const handleSuccess = function(stream) {
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.onstop = function(e) {
+        console.log("data available after MediaRecorder.stop() called.");
+
+        var clipContainer = document.createElement('article');
+        var clipLabel = document.createElement('p');
+        var wave = document.createElement('div');
+        wave.setAttribute("id", "waveform" + idCounter);
+        var deleteButton = document.createElement('button');
+        var playPauseButton = document.createElement('button');
+       
+        clipContainer.classList.add('clip');
+        deleteButton.textContent = 'Delete';
+        deleteButton.className = 'delete';
+
+        playPauseButton.textContent = 'Play/Pause';
+
+        clipLabel.textContent = new Date();
+
+        clipContainer.appendChild(clipLabel);
+        clipContainer.appendChild(wave);
+        clipContainer.appendChild(playPauseButton);
+        clipContainer.appendChild(document.createElement("br"));
+        clipContainer.appendChild(deleteButton);
+        soundClips.appendChild(clipContainer);
+
+        var blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+        chunks = [];
+        var audioURL = window.URL.createObjectURL(blob);
+        var wavesurfer = WaveSurfer.create({
+          container: '#waveform' + idCounter,
+          waveColor: 'violet',
+          progressColor: 'purple'
+        });
+        wavesurfer.load(audioURL);
+        idCounter = idCounter + 1;
+        playPauseButton.onclick = function(e) {
+          wavesurfer.playPause();
+        }
+        console.log("recorder stopped");
+
+        deleteButton.onclick = function(e) {
+          evtTgt = e.target;
+          evtTgt.parentNode.parentNode.removeChild(evtTgt.parentNode);
+        }
+      }
+
+      mediaRecorder.ondataavailable = function(e) {
+        chunks.push(e.data);
+      }
+
+      const context = new AudioContext();
+      const source = context.createMediaStreamSource(stream);
+      const processor = context.createScriptProcessor(2048, 2, 2);
+
+      source.connect(processor);
+      processor.connect(context.destination);
+
+      processor.onaudioprocess = function (e) {
+          var inputData = e.inputBuffer.getChannelData(0);
+          var inputDataLength = inputData.length;
+          var total = 0;
+          for (var i = 0; i < inputDataLength; i++) {
+              total += inputData[i++] * inputData[i++];
+          }
+          
+          var rms = Math.sqrt(total / inputDataLength);
+          updateMeter(rms);
+      };
+    };
+
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(handleSuccess);
+
+    function handleOnOffSwitchClick(cb) {
+      if (cb.checked) {
+        mediaRecorder.start();
+        console.log(mediaRecorder.state);
+        console.log("recorder started");
+      } else {
+        mediaRecorder.stop();
+        console.log(mediaRecorder.state);
+        console.log("recorder stopped")
+      }
+    }
+  </script>
+</body>
+</html>
