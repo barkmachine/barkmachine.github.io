@@ -1,4 +1,4 @@
-# barkmachine.github.io
+Visit the site live: https://barkmachine.github.io/
 
 Tool to help owners of dogs with separation or isolation anxiety.
 
